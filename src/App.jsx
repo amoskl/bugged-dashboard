@@ -44,13 +44,17 @@ function App() {
   const [tasks, setTasks] = useState(initialTasks)
   const [filter, setFilter] = useState('all')
 
+  const getTodayString = () => {
+    return new Date().toISOString().split('T')[0]
+  }
+
   // BUG 1: Filter not working - the filter logic is broken
   const filteredTasks = tasks.filter(task => {
     if (filter === 'all') return true
     if (filter === 'completed') return task.completed
     if (filter === 'pending') return !task.completed
-    // BUG: This condition will never work because we're comparing wrong values
-    if (filter === 'due-today') return task.dueDate === 'today' // Should compare with actual today's date
+    // Fix: Compare with actual today's date using getTodayString()
+    if (filter === 'due-today') return task.dueDate === getTodayString()
     return true
   })
 
@@ -62,22 +66,18 @@ function App() {
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 500))
     
-    // BUG: This line is commented out, so the UI never updates
-    // setTasks(tasks.map(task => 
-    //   task.id === taskId ? { ...task, completed: !task.completed } : task
-    // ))
+    // Fix: Uncommented this line so the UI updates
+    setTasks(tasks.map(task => 
+      task.id === taskId ? { ...task, completed: !task.completed } : task
+    ))
     
     console.log(`Task ${taskId} marked as complete in backend!`)
   }
 
   // BUG 3: Error on hover - accessing undefined property
   const handleTaskHover = (task) => {
-    // BUG: Trying to access a property that doesn't exist
-    console.log(`Hovering over task with category: ${task.category.name}`) // task.category is undefined
-  }
-
-  const getTodayString = () => {
-    return new Date().toISOString().split('T')[0]
+    // Fixed: Show actual task properties instead of undefined category
+    console.log(`Hovering over task: "${task.title}" - Priority: ${task.priority}, Due: ${task.dueDate}`)
   }
 
   const formatDate = (dateString) => {
@@ -145,13 +145,13 @@ function App() {
               <div 
                 key={task.id} 
                 className={`task-item ${task.completed ? 'completed' : ''}`}
-                onMouseEnter={() => handleTaskHover(task)} // BUG 3: This will cause an error
+                onMouseEnter={() => handleTaskHover(task)}
               >
                 <div className="task-checkbox">
                   <input 
                     type="checkbox" 
                     checked={task.completed}
-                    onChange={() => markComplete(task.id)} // BUG 2: Won't update UI
+                    onChange={() => markComplete(task.id)}
                   />
                 </div>
                 <div className="task-content">
