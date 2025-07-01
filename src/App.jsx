@@ -44,34 +44,75 @@ function App() {
   const [tasks, setTasks] = useState(initialTasks)
   const [filter, setFilter] = useState('all')
 
+  console.log('🔄 App rendered with filter:', filter)
+  console.log('📋 Current tasks:', tasks)
+
+  const getTodayString = () => {
+    const today = new Date().toISOString().split('T')[0]
+    console.log('📅 Today string:', today)
+    return today
+  }
+
   const filteredTasks = tasks.filter(task => {
-    if (filter === 'all') return true
-    if (filter === 'completed') return task.completed
-    if (filter === 'pending') return !task.completed
-    if (filter === 'due-today') return task.dueDate === 'today' 
+    console.log(`🔍 Filtering task ${task.id} (${task.title}) with filter: ${filter}`)
+    console.log(`   Task dueDate: ${task.dueDate}, Today: ${getTodayString()}`)
+    
+    if (filter === 'all') {
+      console.log('   ✅ Filter: all - including task')
+      return true
+    }
+    if (filter === 'completed') {
+      console.log(`   ${task.completed ? '✅' : '❌'} Filter: completed - task.completed: ${task.completed}`)
+      return task.completed
+    }
+    if (filter === 'pending') {
+      console.log(`   ${!task.completed ? '✅' : '❌'} Filter: pending - task.completed: ${task.completed}`)
+      return !task.completed
+    }
+    if (filter === 'due-today') {
+      const isDueToday = task.dueDate === getTodayString()
+      console.log(`   ${isDueToday ? '✅' : '❌'} Filter: due-today - isDueToday: ${isDueToday}`)
+      return isDueToday
+    }
+    console.log('   ⚠️  Unknown filter, including task')
     return true
   })
 
+  console.log('📊 Filtered tasks result:', filteredTasks)
+
   const markComplete = async (taskId) => {
+    console.log(`🎯 markComplete called for task ${taskId}`)
+    
     // Mock API call that "works" in backend
-    console.log(`Marking task ${taskId} as complete...`)
+    console.log(`📡 Sending API request to mark task ${taskId} as complete...`)
     
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 500))
     
-    // setTasks(tasks.map(task => 
-    //   task.id === taskId ? { ...task, completed: !task.completed } : task
-    // ))
+    console.log(`✅ API response: Task ${taskId} marked as complete in backend!`)
     
-    console.log(`Task ${taskId} marked as complete in backend!`)
+    // FIX: Uncomment and fix the state update
+    setTasks(prevTasks => {
+      const updatedTasks = prevTasks.map(task => 
+        task.id === taskId ? { ...task, completed: !task.completed } : task
+      )
+      console.log(`🔄 State updated for task ${taskId}. Updated tasks:`, updatedTasks)
+      return updatedTasks
+    })
   }
 
   const handleTaskHover = (task) => {
-    console.log(`Hovering over task with category: ${task.category.name}`)
-  }
-
-  const getTodayString = () => {
-    return new Date().toISOString().split('T')[0]
+    console.log(`🖱️  Mouse entered task ${task.id}: "${task.title}"`)
+    console.log(`   Task details:`, task)
+    
+    // FIX: Handle undefined category properly
+    if (task.category && task.category.name) {
+      console.log(`   Category: ${task.category.name}`)
+    } else {
+      console.log(`   No category defined for this task`)
+    }
+    
+    console.log(`   Due: ${task.dueDate}, Priority: ${task.priority}, Completed: ${task.completed}`)
   }
 
   const formatDate = (dateString) => {
@@ -94,6 +135,11 @@ function App() {
     }
   }
 
+  const handleFilterChange = (newFilter) => {
+    console.log(`🔧 Filter changed from "${filter}" to "${newFilter}"`)
+    setFilter(newFilter)
+  }
+
   return (
     <div className="dashboard">
       <header className="dashboard-header">
@@ -105,25 +151,25 @@ function App() {
         <div className="filters">
           <button 
             className={filter === 'all' ? 'filter-btn active' : 'filter-btn'}
-            onClick={() => setFilter('all')}
+            onClick={() => handleFilterChange('all')}
           >
             All Tasks ({tasks.length})
           </button>
           <button 
             className={filter === 'pending' ? 'filter-btn active' : 'filter-btn'}
-            onClick={() => setFilter('pending')}
+            onClick={() => handleFilterChange('pending')}
           >
             Pending ({tasks.filter(t => !t.completed).length})
           </button>
           <button 
             className={filter === 'completed' ? 'filter-btn active' : 'filter-btn'}
-            onClick={() => setFilter('completed')}
+            onClick={() => handleFilterChange('completed')}
           >
             Completed ({tasks.filter(t => t.completed).length})
           </button>
           <button 
             className={filter === 'due-today' ? 'filter-btn active' : 'filter-btn'}
-            onClick={() => setFilter('due-today')}
+            onClick={() => handleFilterChange('due-today')}
           >
             Due Today ({tasks.filter(t => t.dueDate === getTodayString()).length})
           </button>
@@ -145,7 +191,10 @@ function App() {
                   <input 
                     type="checkbox" 
                     checked={task.completed}
-                    onChange={() => markComplete(task.id)} 
+                    onChange={() => {
+                      console.log(`☑️  Checkbox clicked for task ${task.id}`)
+                      markComplete(task.id)
+                    }} 
                   />
                 </div>
                 <div className="task-content">
@@ -165,7 +214,10 @@ function App() {
                 <div className="task-actions">
                   <button 
                     className="complete-btn"
-                    onClick={() => markComplete(task.id)}
+                    onClick={() => {
+                      console.log(`🔘 Complete button clicked for task ${task.id}`)
+                      markComplete(task.id)
+                    }}
                     disabled={task.completed}
                   >
                     {task.completed ? 'Completed' : 'Mark Complete'}
